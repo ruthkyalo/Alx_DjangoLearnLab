@@ -1,16 +1,21 @@
-from django.shortcuts import render, redirect
-from .models import Library, Book, UserProfile
-from django.views.generic.detail import DetailView
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
+from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+
+from .models import Library, Book, UserProfile
+from .forms import BookForm  # <-- Make sure to create this form!
 
 # Function-Based View to list all books
 def list_books(request):
     books = Book.objects.all()
     return render(request, 'relationship_app/list_books.html', {'books': books})
 
-# Class-Based View for library detail
+# Class-Based View for Library Detail
 class LibraryDetailView(DetailView):
     model = Library
     template_name = 'relationship_app/library_detail.html'
@@ -22,13 +27,13 @@ def register_view(request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)  # Log in the user after registration
-            return redirect('home')  # Redirect to homepage or dashboard
+            login(request, user)
+            return redirect('home')  # Adjust this redirect if needed
     else:
         form = UserCreationForm()
     return render(request, 'relationship_app/register.html', {'form': form})
 
-# Role checking function
+# Role checker factory
 def check_role(role):
     def inner(user):
         try:
@@ -37,7 +42,7 @@ def check_role(role):
             return False
     return inner
 
-# Role-based views
+# Role-based dashboard views
 @login_required
 @user_passes_test(check_role('Admin'))
 def admin_view(request):
@@ -52,3 +57,28 @@ def librarian_view(request):
 @user_passes_test(check_role('Member'))
 def member_view(request):
     return render(request, 'relationship_app/member_view.html')
+
+# Decorator for class-based views
+def class_login_and_role_required(role):
+    return method_decorator([login_required, user_passes_test(check_role(role))], name='dispatch')
+
+# Librarian-only book management views
+@class_login_and_role_required('Librarian')
+class BookCreateView(CreateView):
+    model = Book
+    form_class = BookForm
+    template_name = 'relationship_app/book_form.html'
+    success_url = reverse_lazy('list_books')
+
+@class_login_and_role_required('Librarian')
+class BookUpdateView(UpdateView):
+    model = Book
+    form_class = BookForm
+    template_name = 'relationship_app/book_form.html'
+    success_url = reverse_lazy('list_books')
+
+@class_login_and_role_required('Librarian')
+class BookDeleteView(DeleteView):
+    model = Book
+    template_name = 'relationship_app/book_confirm_delete.html'
+    success_url = reverse_lazy('list_books')
