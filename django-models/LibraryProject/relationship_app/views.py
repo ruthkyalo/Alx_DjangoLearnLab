@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import permission_required
+from django.utils.decorators import method_decorator
 
 from .models import Library, Book, UserProfile
 from .forms import BookForm  # <-- Make sure to create this form!
