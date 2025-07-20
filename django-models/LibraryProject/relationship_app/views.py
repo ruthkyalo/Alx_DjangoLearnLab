@@ -6,7 +6,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth import login
-
+from django.contrib.auth.decorators import login_required, user_passes_test
+from .models import UserProfile
 
 # Function-Based View to list all books
 def list_books(request):
@@ -30,3 +31,26 @@ def register_view(request):
     else:
         form = UserCreationForm()
     return render(request, 'relationship_app/register.html', {'form': form})
+
+def check_role(role):
+    def inner(user):
+        try:
+            return user.userprofile.role == role
+        except UserProfile.DoesNotExist:
+            return False
+    return inner
+
+@login_required
+@user_passes_test(check_role('Admin'))
+def admin_view(request):
+    return render(request, 'admin_view.html')
+
+@login_required
+@user_passes_test(check_role('Librarian'))
+def librarian_view(request):
+    return render(request, 'librarian_view.html')
+
+@login_required
+@user_passes_test(check_role('Member'))
+def member_view(request):
+    return render(request, 'member_view.html')
