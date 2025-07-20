@@ -58,30 +58,33 @@ def librarian_view(request):
 def member_view(request):
     return render(request, 'relationship_app/member_view.html')
 
-# Combined decorator for class-based views with role and permission
-def class_login_role_and_permission_required(role, permission):
-    return method_decorator([
-        login_required,
-        user_passes_test(check_role(role)),
-        permission_required(permission, raise_exception=True)
-    ], name='dispatch')
+# Decorator for class-based views (roles)
+def class_login_and_role_required(role):
+    return method_decorator([login_required, user_passes_test(check_role(role))], name='dispatch')
 
-# Librarian-only book management views with permission checks
-@class_login_role_and_permission_required('Librarian', 'relationship_app.add_book')
+# Decorator for class-based views (permissions)
+def class_permission_required(perm):
+    return method_decorator(permission_required(perm, raise_exception=True), name='dispatch')
+
+# Book Management Views (with permission_required)
+@class_login_and_role_required('Librarian')
+@class_permission_required('relationship_app.can_add_book')
 class BookCreateView(CreateView):
     model = Book
     form_class = BookForm
     template_name = 'relationship_app/book_form.html'
     success_url = reverse_lazy('list_books')
 
-@class_login_role_and_permission_required('Librarian', 'relationship_app.change_book')
+@class_login_and_role_required('Librarian')
+@class_permission_required('relationship_app.can_change_book')
 class BookUpdateView(UpdateView):
     model = Book
     form_class = BookForm
     template_name = 'relationship_app/book_form.html'
     success_url = reverse_lazy('list_books')
 
-@class_login_role_and_permission_required('Librarian', 'relationship_app.delete_book')
+@class_login_and_role_required('Librarian')
+@class_permission_required('relationship_app.can_delete_book')
 class BookDeleteView(DeleteView):
     model = Book
     template_name = 'relationship_app/book_confirm_delete.html'
