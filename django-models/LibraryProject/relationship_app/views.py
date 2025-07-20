@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth import login
 
 
 # Function-Based View to list all books
@@ -23,9 +24,9 @@ def register_view(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('login')  # redirect to login after successful registration
+            user = form.save()
+            login(request, user)  # Log in the user after registration
+            return redirect('home')  # or wherever you want to redirect
     else:
         form = UserCreationForm()
     return render(request, 'relationship_app/register.html', {'form': form})
-
