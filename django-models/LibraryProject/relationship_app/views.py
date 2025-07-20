@@ -2,11 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required, user_passes_test, permission_required
 from django.contrib.auth.models import User
 from django.urls import reverse_lazy
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import permission_required
 from django.utils.decorators import method_decorator
 
 from .models import Library, Book, UserProfile
@@ -60,26 +58,30 @@ def librarian_view(request):
 def member_view(request):
     return render(request, 'relationship_app/member_view.html')
 
-# Decorator for class-based views
-def class_login_and_role_required(role):
-    return method_decorator([login_required, user_passes_test(check_role(role))], name='dispatch')
+# Combined decorator for class-based views with role and permission
+def class_login_role_and_permission_required(role, permission):
+    return method_decorator([
+        login_required,
+        user_passes_test(check_role(role)),
+        permission_required(permission, raise_exception=True)
+    ], name='dispatch')
 
-# Librarian-only book management views
-@class_login_and_role_required('Librarian')
+# Librarian-only book management views with permission checks
+@class_login_role_and_permission_required('Librarian', 'relationship_app.add_book')
 class BookCreateView(CreateView):
     model = Book
     form_class = BookForm
     template_name = 'relationship_app/book_form.html'
     success_url = reverse_lazy('list_books')
 
-@class_login_and_role_required('Librarian')
+@class_login_role_and_permission_required('Librarian', 'relationship_app.change_book')
 class BookUpdateView(UpdateView):
     model = Book
     form_class = BookForm
     template_name = 'relationship_app/book_form.html'
     success_url = reverse_lazy('list_books')
 
-@class_login_and_role_required('Librarian')
+@class_login_role_and_permission_required('Librarian', 'relationship_app.delete_book')
 class BookDeleteView(DeleteView):
     model = Book
     template_name = 'relationship_app/book_confirm_delete.html'
