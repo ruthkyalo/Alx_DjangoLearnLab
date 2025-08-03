@@ -43,6 +43,8 @@ INSTALLED_APPS = [
 ]
 AUTH_USER_MODEL = 'users.CustomUser'  # Custom user model config
 
+AUTH_USER_MODEL = 'bookshelf.CustomUser'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
