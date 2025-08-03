@@ -1,4 +1,10 @@
+
 from django import forms
 
-class BookSearchForm(forms.Form):
-    title = forms.CharField(required=False, max_length=100)
+class ExampleForm(forms.Form):
+    search_query = forms.CharField(
+        label='Search',
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': 'Search books...'})
+    )
