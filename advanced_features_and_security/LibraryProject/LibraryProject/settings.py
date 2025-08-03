@@ -145,10 +145,13 @@ CSP_FONT_SRC = ("'self'", 'fonts.gstatic.com')
 CSP_SCRIPT_SRC = ("'self'",)
 
 # SECURITY SETTINGS
+
 # Enabling browser-based protections
 SECURE_BROWSER_XSS_FILTER = True  # Prevent XSS in modern browsers
-X_FRAME_OPTIONS = 'DENY'  # Prevent clickjacking
 SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME sniffing
+X_FRAME_OPTIONS = 'DENY'  # Prevent clickjacking
+
+# Secure cookies
 CSRF_COOKIE_SECURE = True  # Send CSRF cookie over HTTPS only
 SESSION_COOKIE_SECURE = True  # Send session cookie over HTTPS only
 
@@ -160,12 +163,5 @@ SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-# Secure cookies
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-
-# Secure headers
-X_FRAME_OPTIONS = 'DENY'
-SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_SSL_REDIRECT = True
+# Secure proxy header
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
