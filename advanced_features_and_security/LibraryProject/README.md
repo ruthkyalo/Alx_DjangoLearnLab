@@ -1,16 +1,20 @@
-## LibraryProject
+# Permissions and Groups Setup
 
-This is a basic Django project setup for learning and practicing Django development.
+## Custom Permissions Added
+Defined in `Book` model:
+- can_view
+- can_create
+- can_edit
+- can_delete
 
-## Features
-- Django version 5.2.4
-- Default project structure
-- Development server running at `http://127.0.0.1:8000/`
+## Groups Created
+- **Viewers**: has `can_view`
+- **Editors**: has `can_view`, `can_create`, `can_edit`
+- **Admins**: all permissions
 
-## Setup Instructions
+## Views Protection
+- All actions (view, create, edit, delete) are protected using `@permission_required`.
 
-```bash
-pip install django
-django-admin startproject LibraryProject
-cd LibraryProject
-python manage.py runserver
+## Testing
+Create test users and assign to groups via Django admin to verify permissions.
+
