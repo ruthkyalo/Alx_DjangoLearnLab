@@ -1,45 +1,33 @@
-from django.shortcuts import render
-
-# Create your views here.
-# api/views.py
-from rest_framework import viewsets
-from .models import Author, Book
-from .serializers import AuthorSerializer, BookSerializer
-
-class AuthorViewSet(viewsets.ModelViewSet):
-    """
-    AuthorViewSet
-    -------------
-    Handles CRUD for Author objects.
-    - list:   GET /authors/        -> returns all authors
-    - create: POST /authors/       -> create a new author
-    - retrieve: GET /authors/{id}/ -> fetch a single author
-    - update: PUT/PATCH /authors/{id}/ -> update an author
-    - destroy: DELETE /authors/{id}/   -> delete an author
-
-    Nested Relationship:
-    --------------------
-    Each author includes their related books (via AuthorSerializer).
-    """
-    queryset = Author.objects.all()
-    serializer_class = AuthorSerializer
+from rest_framework import generics
+from .models import Book
+from .serializers import BookSerializer
 
 
-class BookViewSet(viewsets.ModelViewSet):
-    """
-    BookViewSet
-    -----------
-    Handles CRUD for Book objects.
-    - list:   GET /books/        -> returns all books
-    - create: POST /books/       -> create a new book
-    - retrieve: GET /books/{id}/ -> fetch a single book
-    - update: PUT/PATCH /books/{id}/ -> update a book
-    - destroy: DELETE /books/{id}/   -> delete a book
+class BookListView(generics.ListAPIView):
+    """ListView: GET /api/books/ → all books"""
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
 
-    Custom Behavior:
-    ----------------
-    - Includes validation to ensure 'publication_year' is not in the future,
-      handled in the BookSerializer.
-    """
+
+class BookDetailView(generics.RetrieveAPIView):
+    """DetailView: GET /api/books/<pk>/ → single book by id"""
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+
+
+class BookCreateView(generics.CreateAPIView):
+    """CreateView: POST /api/books/create/ → create a new book"""
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+
+
+class BookUpdateView(generics.UpdateAPIView):
+    """UpdateView: PUT/PATCH /api/books/<pk>/update/ → update a book"""
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+
+
+class BookDeleteView(generics.DestroyAPIView):
+    """DeleteView: DELETE /api/books/<pk>/delete/ → delete a book"""
     queryset = Book.objects.all()
     serializer_class = BookSerializer
