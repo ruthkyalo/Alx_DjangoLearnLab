@@ -141,3 +141,24 @@ class BookAPITestCase(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         years = [b["publication_year"] for b in resp.json()]
         self.assertEqual(years, sorted(years))
+
+    # -------------------- Permissions --------------------
+    def test_create_requires_auth(self):
+        self.auth(user=None)  # unauthenticated
+        data = {"title": "Gamma", "publication_year": 2010, "author": self.a1.id}
+        url = self.url_create()
+        resp = self.client.post(url, data, format="json")
+        # Depending on auth settings this can be 401 or 403; accept either
+        self.assertIn(resp.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+
+    def test_update_requires_auth(self):
+        self.auth(user=None)
+        url = self.url_update(self.b1.id)
+        resp = self.client.patch(url, {"title": "Alpha Revised"}, format="json")
+        self.assertIn(resp.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+
+    def test_delete_requires_auth(self):
+        self.auth(user=None)
+        url = self.url_delete(self.b2.id)
+        resp = self.client.delete(url)
+        self.assertIn(resp.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
