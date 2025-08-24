@@ -1,6 +1,9 @@
+# api/views.py
 from rest_framework import generics, parsers, exceptions, permissions
-from .models import Book
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from .models import Book
 from .serializers import BookSerializer
 from django.http import JsonResponse
 
@@ -9,14 +12,34 @@ class BookListView(generics.ListAPIView):
     """
     ListView: GET /api/books/
     - Publicly accessible (read-only).
-    - Supports optional filters:
-        ?author=<id>   → filter by author id
-        ?year=<YYYY>   → filter by publication_year
+    - Supports filtering, searching, and ordering:
+        Filtering:
+            ?title=SomeTitle
+            ?publication_year=2020
+            ?author=<id>
+        Searching:
+            ?search=some+text   (searches in title and author name)
+        Ordering:
+            ?ordering=publication_year
+            ?ordering=-title   (prefix - for descending)
     """
     serializer_class = BookSerializer
-    permission_classes = [permissions.AllowAny]  # Anyone can view
+    permission_classes = [permissions.AllowAny]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+
+    # Fields allowed for filtering
+    filterset_fields = ['title', 'publication_year', 'author']
+
+    # Fields used for searching (case-insensitive contains)
+    search_fields = ['title', 'author__name']
+
+    # Fields allowed for ordering and default ordering
+    ordering_fields = ['title', 'publication_year']
+    ordering = ['title']
 
     def get_queryset(self):
+        # DjangoFilterBackend already handles query params from filterset_fields.
+        # Extra manual filters are optional if you want redundancy.
         qs = Book.objects.all()
         author_id = self.request.query_params.get("author")
         year = self.request.query_params.get("year")
@@ -88,8 +111,6 @@ class BookDeleteView(generics.DestroyAPIView):
     serializer_class = BookSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-
-# ✅ Extra function-based views for tests that require "books/update" and "books/delete"
 def book_update(request, pk=None):
     """
     Function-based placeholder update view.
