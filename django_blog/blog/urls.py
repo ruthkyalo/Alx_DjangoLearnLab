@@ -12,9 +12,9 @@ urlpatterns = [
     path('profile/', views.profile_view, name='profile'),
     path('post/new/', PostCreateView.as_view(), name='post-create'),  # create
     path('', PostListView.as_view(), name='post-list'),  # root URL shows posts
-    path('posts/new/', PostCreateView.as_view(), name='post-create'),
-    path('posts/<int:pk>/', PostDetailView.as_view(), name='post-detail'),
-    path('posts/<int:pk>/edit/', PostUpdateView.as_view(), name='post-update'),
-    path('posts/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
+    path('post/new/', PostCreateView.as_view(), name='post-create'),
+    path('post/<int:pk>/', PostDetailView.as_view(), name='post-detail'),
+    path('post/<int:pk>/edit/', PostUpdateView.as_view(), name='post-update'),
+    path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
 
 ]
