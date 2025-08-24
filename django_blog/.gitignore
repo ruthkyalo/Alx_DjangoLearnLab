@@ -27,3 +27,6 @@ coverage.xml
 
 # pytest cache
 .pytest_cache/
+
+#
+.env
