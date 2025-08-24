@@ -82,3 +82,62 @@ class BookAPITestCase(APITestCase):
     def auth(self, user=None):
         self.client = APIClient()
         self.client.force_authenticate(user=user)
+
+    # -------------------- Read-only tests --------------------
+    def test_list_books_ok(self):
+        url = self.url_list()
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(len(resp.json()), 3)
+
+    def test_detail_book_ok(self):
+        url = self.url_detail(self.b1.pk)
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.json().get("title"), "Alpha Patterns")
+
+    # -------------------- Filtering --------------------
+    def test_filter_by_author(self):
+        url = self.url_list()
+        resp = self.client.get(f"{url}?author={self.a1.id}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        titles = [b["title"] for b in resp.json()]
+        self.assertTrue("Alpha Patterns" in titles and "Another Alpha" in titles)
+        self.assertNotIn("Beta Clean Code", titles)
+
+    def test_filter_by_publication_year(self):
+        url = self.url_list()
+        resp = self.client.get(f"{url}?publication_year=2008")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        titles = [b["title"] for b in resp.json()]
+        self.assertEqual(titles, ["Beta Clean Code"])
+
+    # -------------------- Searching --------------------
+    def test_search_by_title_or_author(self):
+        url = self.url_list()
+        # should match "Alpha Patterns" and "Another Alpha"
+        resp = self.client.get(f"{url}?search=Alpha")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        titles = sorted([b["title"] for b in resp.json()])
+        self.assertEqual(titles, ["Alpha Patterns", "Another Alpha"])
+
+        # should match author "Bob Martin" via author__name if configured
+        resp2 = self.client.get(f"{url}?search=Martin")
+        self.assertEqual(resp2.status_code, status.HTTP_200_OK)
+        titles2 = [b["title"] for b in resp2.json()]
+        self.assertIn("Beta Clean Code", titles2)
+
+    # -------------------- Ordering --------------------
+    def test_ordering_by_title_desc(self):
+        url = self.url_list()
+        resp = self.client.get(f"{url}?ordering=-title")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        titles = [b["title"] for b in resp.json()]
+        self.assertEqual(titles, sorted(titles, reverse=True))
+
+    def test_ordering_by_year_asc(self):
+        url = self.url_list()
+        resp = self.client.get(f"{url}?ordering=publication_year")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        years = [b["publication_year"] for b in resp.json()]
+        self.assertEqual(years, sorted(years))
