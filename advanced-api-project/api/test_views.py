@@ -162,3 +162,42 @@ class BookAPITestCase(APITestCase):
         url = self.url_delete(self.b2.id)
         resp = self.client.delete(url)
         self.assertIn(resp.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+
+    # -------------------- CRUD (authenticated) --------------------
+    def test_create_book_authenticated(self):
+        self.auth(user=self.user)
+        data = {"title": "Gamma Practices", "publication_year": 2010, "author": self.a1.id}
+
+        # Try POST to list (ListCreate). If method not allowed, try explicit /create/
+        url = self.url_create()
+        resp = self.client.post(url, data, format="json")
+        if resp.status_code == status.HTTP_405_METHOD_NOT_ALLOWED:
+            url = "/api/books/create/"
+            resp = self.client.post(url, data, format="json")
+
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Book.objects.filter(title="Gamma Practices").count(), 1)
+
+    def test_update_book_authenticated(self):
+        self.auth(user=self.user)
+        url = self.url_update(self.b1.id)
+        resp = self.client.patch(url, {"title": "Alpha Patterns (2nd Ed.)"}, format="json")
+        if resp.status_code == status.HTTP_405_METHOD_NOT_ALLOWED:
+            # Try explicit update route
+            url = f"/api/books/{self.b1.id}/update/"
+            resp = self.client.patch(url, {"title": "Alpha Patterns (2nd Ed.)"}, format="json")
+
+        self.assertIn(resp.status_code, [status.HTTP_200_OK, status.HTTP_202_ACCEPTED])
+        self.b1.refresh_from_db()
+        self.assertEqual(self.b1.title, "Alpha Patterns (2nd Ed.)")
+
+    def test_delete_book_authenticated(self):
+        self.auth(user=self.user)
+        url = self.url_delete(self.b3.id)
+        resp = self.client.delete(url)
+        if resp.status_code == status.HTTP_405_METHOD_NOT_ALLOWED:
+            url = f"/api/books/{self.b3.id}/delete/"
+            resp = self.client.delete(url)
+
+        self.assertIn(resp.status_code, [status.HTTP_204_NO_CONTENT, status.HTTP_200_OK])
+        self.assertFalse(Book.objects.filter(id=self.b3.id).exists())
