@@ -1,18 +1,18 @@
 # api/views.py
-
-from rest_framework import generics
+from rest_framework import generics, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-from django_filters import rest_framework as filters
+from django_filters import rest_framework as filters_django
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Book
 from .serializers import BookSerializer
 
 
 # Define the filter class for Book
-class BookFilter(filters.FilterSet):
-    title = filters.CharFilter(field_name="title", lookup_expr="icontains")
-    author = filters.CharFilter(field_name="author", lookup_expr="icontains")
-    publication_year = filters.NumberFilter(field_name="publication_year")
+class BookFilter(filters_django.FilterSet):
+    title = filters_django.CharFilter(field_name="title", lookup_expr="icontains")
+    author = filters_django.CharFilter(field_name="author", lookup_expr="icontains")
+    publication_year = filters_django.NumberFilter(field_name="publication_year")
 
     class Meta:
         model = Book
@@ -24,8 +24,12 @@ class BookListCreateView(generics.ListCreateAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    filter_backends = (filters.DjangoFilterBackend,)
+
+    # Add filtering + ordering
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = BookFilter
+    ordering_fields = ["title", "author", "publication_year"]
+    ordering = ["title"]  # default ordering
 
 
 # API view for retrieving, updating, and deleting a book
