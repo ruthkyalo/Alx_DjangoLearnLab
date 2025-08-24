@@ -201,3 +201,5 @@ class BookAPITestCase(APITestCase):
 
         self.assertIn(resp.status_code, [status.HTTP_204_NO_CONTENT, status.HTTP_200_OK])
         self.assertFalse(Book.objects.filter(id=self.b3.id).exists())
+
+        
