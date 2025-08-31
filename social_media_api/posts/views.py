@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions, filters
-from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 
@@ -36,11 +36,10 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
 # Feed endpoint
-class FeedViewSet(viewsets.ViewSet):
+class FeedView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=False, methods=['get'])
-    def feed(self, request):
+    def get(self, request):
         user = request.user
         following_users = user.following.all()  # store following users in a variable
         posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
