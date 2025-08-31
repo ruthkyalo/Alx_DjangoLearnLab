@@ -5,6 +5,8 @@ from django.contrib.contenttypes.models import ContentType
 from .models import Post, Comment, Like
 from .serializers import PostSerializer, CommentSerializer
 from notifications.models import Notification
+from django.shortcuts import get_object_or_404
+
 
 # Custom permission
 class IsAuthorOrReadOnly(permissions.BasePermission):
@@ -20,20 +22,13 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticated, IsAuthorOrReadOnly]
 
-    filter_backends = [filters.SearchFilter]  
-    search_fields = ['title', 'content'] 
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
-    # Like a post
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
-        post = self.get_object()
-        like, created = Like.objects.get_or_create(post=post, user=request.user)
+        post = get_object_or_404(Post, pk=pk)
+        like, created = Like.objects.get_or_create(user=request.user, post=post)
         if not created:
             return Response({'detail': 'Already liked'}, status=status.HTTP_400_BAD_REQUEST)
-        # Create notification if liking someone else's post
+
         if post.author != request.user:
             Notification.objects.create(
                 recipient=post.author,
@@ -44,12 +39,11 @@ class PostViewSet(viewsets.ModelViewSet):
             )
         return Response({'status': 'Post liked'})
 
-    # Unlike a post
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def unlike(self, request, pk=None):
-        post = self.get_object()
+        post = get_object_or_404(Post, pk=pk)
         try:
-            like = Like.objects.get(post=post, user=request.user)
+            like = Like.objects.get(user=request.user, post=post)
             like.delete()
             return Response({'status': 'Post unliked'})
         except Like.DoesNotExist:
