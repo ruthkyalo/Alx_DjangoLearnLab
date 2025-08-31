@@ -20,8 +20,8 @@ class FollowUserView(generics.GenericAPIView):
     queryset = CustomUser.objects.all()
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, pk, *args, **kwargs):
-        user_to_follow = self.get_queryset().get(pk=pk)
+    def post(self, request, user_id, *args, **kwargs):
+        user_to_follow = self.get_queryset().get(pk=user_id)
         request.user.following.add(user_to_follow)
         return Response({'status': f'You are now following {user_to_follow.username}'}, status=status.HTTP_200_OK)
 
@@ -30,7 +30,7 @@ class UnfollowUserView(generics.GenericAPIView):
     queryset = CustomUser.objects.all()
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, pk, *args, **kwargs):
-        user_to_unfollow = self.get_queryset().get(pk=pk)
+    def post(self, request, user_id, *args, **kwargs):
+        user_to_unfollow = self.get_queryset().get(pk=user_id)
         request.user.following.remove(user_to_unfollow)
         return Response({'status': f'You have unfollowed {user_to_unfollow.username}'}, status=status.HTTP_200_OK)
