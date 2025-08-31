@@ -1,11 +1,8 @@
-from rest_framework import generics, status, permissions, viewsets
-from rest_framework.decorators import action
+from rest_framework import generics, status, permissions
 from rest_framework.response import Response
-from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 from .serializers import UserRegistrationSerializer
-
-User = get_user_model()
+from .models import CustomUser
 
 # Registration View
 class RegisterView(generics.CreateAPIView):
@@ -18,19 +15,22 @@ class RegisterView(generics.CreateAPIView):
         response.data['token'] = token.key
         return response
 
-# Follow/Unfollow ViewSet
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+# Follow User
+class FollowUserView(generics.GenericAPIView):
+    queryset = CustomUser.objects.all()
     permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=True, methods=['post'])
-    def follow(self, request, pk=None):
-        user_to_follow = self.get_object()
+    def post(self, request, pk, *args, **kwargs):
+        user_to_follow = self.get_queryset().get(pk=pk)
         request.user.following.add(user_to_follow)
-        return Response({'status': f'You are now following {user_to_follow.username}'})
+        return Response({'status': f'You are now following {user_to_follow.username}'}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'])
-    def unfollow(self, request, pk=None):
-        user_to_unfollow = self.get_object()
+# Unfollow User
+class UnfollowUserView(generics.GenericAPIView):
+    queryset = CustomUser.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk, *args, **kwargs):
+        user_to_unfollow = self.get_queryset().get(pk=pk)
         request.user.following.remove(user_to_unfollow)
-        return Response({'status': f'You have unfollowed {user_to_unfollow.username}'})
+        return Response({'status': f'You have unfollowed {user_to_unfollow.username}'}, status=status.HTTP_200_OK)
